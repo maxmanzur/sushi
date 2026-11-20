@@ -71,7 +71,7 @@ export async function onRequestPost({request,params,env}) {
     const quote=await quote_delivery(env,quotePayload);
     if(!quote?.id)throw new Error("Uber no devolvió un identificador de cotización.");
     const quoteId=quote.id;
-    const quoteFee=Number.isSafeInteger(Number(quote.fee))?Number(quote.fee):null;
+    const quoteFee=quote.fee!==undefined&&quote.fee!==null&&Number.isSafeInteger(Number(quote.fee))?Number(quote.fee):null;
     const quoteCurrency=typeof quote.currency_type==="string"?quote.currency_type:(typeof quote.currency==="string"?quote.currency.toUpperCase():null);
     await env.DB.prepare("UPDATE uber_dispatches SET state='quoted',quote_id=?,quote_fee=?,quote_currency=?,updated_at=CURRENT_TIMESTAMP WHERE order_id=?").bind(String(quoteId),quoteFee,quoteCurrency,id).run();
     const created=await create_delivery(env,{
