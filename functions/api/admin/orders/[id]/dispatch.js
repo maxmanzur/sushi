@@ -2,7 +2,7 @@ import {json,fail} from "../../../_lib/response.js";
 import {getAdminSession} from "../../../_lib/auth.js";
 import {quote_delivery,create_delivery} from "../../../_lib/uber-direct.js";
 
-const PICKUP_ADDRESS=JSON.stringify({street_address:["Cavassa 2763"],city:"Caseros",state:"Buenos Aires",country:"Argentina"});
+const PICKUP_ADDRESS=JSON.stringify({street_address:["Cavassa 2763"],city:"Caseros",state:"Buenos Aires",country:"AR"});
 function clean(value){return typeof value==="string"?value.trim():""}
 
 export async function onRequestPost({request,params,env}) {
@@ -15,9 +15,18 @@ export async function onRequestPost({request,params,env}) {
   const dryRun=env.UBER_DRY_RUN==="true";
   const enabled=env.UBER_ENABLED==="true";
   if(!dryRun&&!enabled)return fail("Despacho bloqueado: UBER_ENABLED no está activado. No se contactó a Uber.",503);
+  if(!dryRun&&env.UBER_API_CONTRACT_VERIFIED!=="true")return fail("Despacho bloqueado: falta verificar el contrato y los datos requeridos por Uber para Argentina. No se contactó a Uber.",503);
+
+  let manifestItems=null;
   if(!dryRun){
-    for(const key of ["UBER_AUTH_URL","UBER_API_BASE_URL","UBER_CLIENT_ID","UBER_CLIENT_SECRET","UBER_CUSTOMER_ID","UBER_PICKUP_PHONE_NUMBER"]){
-      if(!clean(env[key]))return fail("Despacho bloqueado: falta configurar "+key+". No se contactó a Uber.",503);
+    for(const key of ["UBER_AUTH_URL","UBER_API_BASE_URL","UBER_CLIENT_ID","UBER_CLIENT_SECRET","UBER_CUSTOMER_ID","UBER_PICKUP_PHONE_NUMBER","UBER_MANIFEST_ITEMS_JSON"]){
+      if(typeof env[key]!=="string"||!env[key].trim())return fail("Despacho bloqueado: falta configurar "+key+". No se contactó a Uber.",503);
+    }
+    try{
+      manifestItems=JSON.parse(env.UBER_MANIFEST_ITEMS_JSON);
+      if(!Array.isArray(manifestItems)||!manifestItems.length)throw new Error();
+    }catch{
+      return fail("Despacho bloqueado: UBER_MANIFEST_ITEMS_JSON debe contener una lista JSON válida de bultos. No se contactó a Uber.",503);
     }
   }
 
@@ -54,30 +63,32 @@ export async function onRequestPost({request,params,env}) {
     return json({ok:true,dry_run:true,message:"Simulación completada. No se contactó a Uber ni se creó un envío real."});
   }
 
-  const pickupPhone=clean(env.UBER_PICKUP_PHONE_NUMBER);
   const quotePayload={
     pickup_address:PICKUP_ADDRESS,
-    dropoff_address:JSON.stringify({street_address:[clean(order.customer_address)],country:"Argentina"})
+    dropoff_address:JSON.stringify({street_address:[clean(order.customer_address)],country:"AR"})
   };
   try{
     const quote=await quote_delivery(env,quotePayload);
-    if(!quote?.id&&!quote?.quote_id)throw new Error("Uber no devolvió un identificador de cotización.");
-    const quoteId=quote.id||quote.quote_id;
-    await env.DB.prepare("UPDATE uber_dispatches SET state='quoted',quote_id=?,updated_at=CURRENT_TIMESTAMP WHERE order_id=?").bind(String(quoteId),id).run();
+    if(!quote?.id)throw new Error("Uber no devolvió un identificador de cotización.");
+    const quoteId=quote.id;
+    const quoteFee=Number.isSafeInteger(Number(quote.fee))?Number(quote.fee):null;
+    const quoteCurrency=typeof quote.currency_type==="string"?quote.currency_type:(typeof quote.currency==="string"?quote.currency.toUpperCase():null);
+    await env.DB.prepare("UPDATE uber_dispatches SET state='quoted',quote_id=?,quote_fee=?,quote_currency=?,updated_at=CURRENT_TIMESTAMP WHERE order_id=?").bind(String(quoteId),quoteFee,quoteCurrency,id).run();
     const created=await create_delivery(env,{
       quote_id:quoteId,
       pickup_address:PICKUP_ADDRESS,
-      dropoff_address:quotePayload.dropoff_address,
       pickup_name:"GOTOKU SUSHI",
-      pickup_phone_number:pickupPhone,
+      pickup_phone_number:env.UBER_PICKUP_PHONE_NUMBER.trim(),
+      dropoff_address:quotePayload.dropoff_address,
       dropoff_name:clean(order.customer_name),
-      dropoff_phone_number:clean(order.customer_phone)
+      dropoff_phone_number:clean(order.customer_phone),
+      manifest_items:manifestItems
     });
-    const deliveryId=created?.id||created?.delivery_id;
+    const deliveryId=created?.id;
     if(!deliveryId)throw new Error("Respuesta ambigua: Uber no devolvió delivery_id. No se reintentará automáticamente.");
     const trackingUrl=typeof created.tracking_url==="string"?created.tracking_url:null;
     await env.DB.prepare("UPDATE uber_dispatches SET state='created',delivery_id=?,tracking_url=?,uber_status=?,last_error=NULL,updated_at=CURRENT_TIMESTAMP WHERE order_id=?").bind(String(deliveryId),trackingUrl,created.status||null,id).run();
-    return json({ok:true,delivery_id:deliveryId,tracking_url:trackingUrl,message:"Envío creado. El costo del envío se informa por separado."});
+    return json({ok:true,delivery_id:deliveryId,tracking_url:trackingUrl,quote_fee:quoteFee,quote_currency:quoteCurrency,message:"Envío creado. El costo del envío se informa por separado."});
   }catch(error){
     const message=String(error?.message||"Error desconocido").slice(0,500);
     await env.DB.prepare("UPDATE uber_dispatches SET state='failed',last_error=?,updated_at=CURRENT_TIMESTAMP WHERE order_id=?").bind(message,id).run();
