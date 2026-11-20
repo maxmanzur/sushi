@@ -1,0 +1,4 @@
+import {json,fail,body} from "../../../_lib/response.js";
+import {isAdmin} from "../../../_lib/auth.js";
+const allowed=["confirmed","preparing","ready","delivered","cancelled"];
+export async function onRequestPatch({request,params,env}){if(!await isAdmin(request,env))return fail("No autorizado.",401);const id=Number(params.id),x=await body(request);if(!Number.isInteger(id)||id<1||!x||!allowed.includes(x.status))return fail("Estado inválido.");const note=String(x.note||"").slice(0,250);const r=await env.DB.prepare("UPDATE orders SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(x.status,id).run();if(!r.meta.changes)return fail("Pedido no encontrado.",404);await env.DB.prepare("INSERT INTO order_events(order_id,status,note) VALUES(?,?,?)").bind(id,x.status,note).run();return json({ok:true})}
