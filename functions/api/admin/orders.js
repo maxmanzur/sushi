@@ -37,7 +37,7 @@ export async function onRequestGet({request,env}) {
     clauses.push("o.created_at<?");values.push(hasta+" 24:00:00");
   }
   const where=clauses.length?" WHERE "+clauses.join(" AND "):"";
-  const sql="SELECT o.id,o.order_number,o.customer_name,o.customer_phone,o.customer_address,o.delivery_type,o.payment_method,o.total,o.status,o.payment_status,o.delivery_status,o.created_at,o.updated_at,d.state AS dispatch_state,d.delivery_id,d.tracking_url FROM orders o LEFT JOIN uber_dispatches d ON d.order_id=o.id"+where+" ORDER BY o.id DESC LIMIT 100";
+  const sql="SELECT o.id,o.order_number,o.customer_name,o.customer_phone,o.customer_address,o.delivery_type,o.payment_method,o.total,o.status,o.payment_status,o.delivery_status,o.created_at,o.updated_at,d.state AS dispatch_state,d.delivery_id,d.tracking_url,d.quote_fee,d.quote_currency FROM orders o LEFT JOIN uber_dispatches d ON d.order_id=o.id"+where+" ORDER BY o.id DESC LIMIT 100";
   const rows=await env.DB.prepare(sql).bind(...values).all();
   return json({orders:rows.results});
 }
