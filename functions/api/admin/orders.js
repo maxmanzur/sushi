@@ -37,7 +37,7 @@ export async function onRequestGet({request,env}) {
     clauses.push("created_at<?");values.push(hasta+" 24:00:00");
   }
   const where=clauses.length?" WHERE "+clauses.join(" AND "):"";
-  const sql="SELECT id,order_number,customer_name,customer_phone,customer_address,delivery_type,payment_method,total,status,created_at,updated_at FROM orders"+where+" ORDER BY id DESC LIMIT 100";
+  const sql="SELECT id,order_number,customer_name,customer_phone,customer_address,delivery_type,payment_method,total,status,payment_status,created_at,updated_at FROM orders"+where+" ORDER BY id DESC LIMIT 100";
   const rows=await env.DB.prepare(sql).bind(...values).all();
   return json({orders:rows.results});
 }
