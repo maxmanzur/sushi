@@ -94,8 +94,26 @@ $("#orders").addEventListener("click",async event=>{
   }
   if(dispatchButton){
     const id=dispatchButton.dataset.dispatch;
+    if(dispatchButton.disabled)return;
+    const originalText=dispatchButton.textContent.trim()||"ESTÁ LISTO PARA ENTREGA";
     dispatchButton.disabled=true;
-    try{const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}"});msg(result.message||"Solicitud procesada.");await refreshOrdersOnly()}catch(error){msg(error.message);dispatchButton.disabled=false}
+    dispatchButton.textContent="ENVIANDO…";
+    dispatchButton.setAttribute("aria-busy","true");
+    dispatchButton.classList.add("dispatch-pending");
+    try{
+      const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}",timeoutMs:20000});
+      await refreshOrders();
+      msg(result.message||"Solicitud procesada.");
+    }catch(error){
+      if(error.message.startsWith("El servidor no respondió")){
+        try{await refreshOrders()}catch{}
+      }
+      dispatchButton.disabled=false;
+      dispatchButton.textContent=originalText;
+      dispatchButton.removeAttribute("aria-busy");
+      dispatchButton.classList.remove("dispatch-pending");
+      msg(error.message);
+    }
   }
   if(actionButton){
     const id=actionButton.dataset.id,status=actionButton.dataset.action==="accept"?"aceptado":"cancelado";
