@@ -11,30 +11,30 @@
 </head>
 <body>
 <header class="site-header">
-  <a class="brand" href="/" aria-label="Gotoku Sushi, inicio"><span class="brand-mark">極徳</span><span class="brand-copy"><strong>GOTOKU</strong><small>SUSHI · BUENOS AIRES</small></span></a>
+  <a class="brand" href="/" aria-label="Gotoku Sushi, inicio"><span class="brand-mark">極徳</span><span class="brand-copy"><strong>GOTOKU</strong></span></a>
   <button id="cart-toggle" class="button button-outline" type="button" aria-label="Abrir carrito">Pedido <b id="cart-count">0</b></button>
 </header>
 <main class="container">
   <section id="welcome" class="welcome">
-    <p class="eyebrow">SUSHI · BUENOS AIRES</p>
-    <h1>Una experiencia<br><em>para disfrutar.</em></h1>
-    <p class="intro-copy">Elegí cómo querés recibir tu pedido para comenzar.</p>
+    <h1>GOTOKU</h1>
+    <p class="welcome-subtitle">SUSHI NIKKEI · MAX MANZUR</p>
+    <p class="intro-copy">¿CÓMO QUERÉS RECIBIR TU PEDIDO?</p>
     <div class="delivery-options">
       <button class="delivery-card" type="button" data-delivery="delivery">
-        <span class="option-icon" aria-hidden="true">↗</span><span class="option-title">ENVÍO</span>
-        <span class="option-description">Recibilo donde estés</span><span class="option-arrow" aria-hidden="true">→</span>
-      </button>
-      <button class="delivery-card" type="button" data-delivery="pickup">
-        <span class="option-icon" aria-hidden="true">⌂</span><span class="option-title">RETIRO</span>
-        <span class="option-description">Pasá a buscarlo por el local</span><span class="option-arrow" aria-hidden="true">→</span>
-      </button>
-    </div>
-    <p class="location-note">Retiro: Cavassa 2763 · Caseros<br>Envíos mediante Uber Envíos</p>
+<span class="option-icon" aria-hidden="true"><svg viewBox="0 0 48 32" role="img" aria-label="Moto de delivery"><path d="M8 23h7l6-9h8l5 9h5M17 23a5 5 0 1 1-10 0 5 5 0 0 1 10 0Zm26 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0ZM21 14l-3-6h8l3 6M27 8h7l4 6h-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+<span class="option-title">ENVÍO</span><span class="option-description">A domicilio</span>
+<span class="option-detail">Pago únicamente por transferencia bancaria, por el momento.</span>
+<span class="option-detail">Entrega mediante Uber Envíos con seguimiento.</span></button>
+<button class="delivery-card" type="button" data-delivery="pickup">
+<span class="option-icon" aria-hidden="true"><svg viewBox="0 0 48 32" role="img" aria-label="Local"><path d="M7 13h34l-3-9H10l-3 9Zm2 0v15h30V13M18 28V18h12v10M7 13a5 5 0 0 0 10 0 5 5 0 0 0 10 0 5 5 0 0 0 10 0 5 5 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+<span class="option-title">RETIRO</span><span class="option-description">Cavassa 2763, Caseros</span>
+<span class="option-detail">Aceptamos efectivo o transferencia.</span>
+<span class="option-detail">10% de descuento pagando en efectivo.</span></button></div>
   </section>
   <section id="menu-view" hidden>
     <div class="menu-intro">
       <div><p class="eyebrow">MENÚ GOTOKU</p><h1>Elegí tus favoritos.</h1><p id="delivery-summary" class="muted"></p></div>
-      <button id="change-delivery" class="text-button" type="button">Cambiar modalidad</button>
+      <button id="change-delivery" class="text-button" type="button">Cambiar</button>
     </div>
     <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
     <nav id="categories" class="categories" aria-label="Categorías del menú"></nav>
