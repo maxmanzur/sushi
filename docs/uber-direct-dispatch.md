@@ -86,7 +86,7 @@ Variables/secretos previstos para una futura conexión:
 - UBER_PICKUP_PHONE_NUMBER
 - UBER_MANIFEST_ITEMS_JSON (JSON con los datos reales de bultos; no usar dimensiones/peso inventados)
 
-La ruta de despacho exige además UBER_API_CONTRACT_VERIFIED=true antes de cualquier llamada real. Se mantiene false hasta que Uber confirme el contrato habilitado para Argentina, si hacen falta coordenadas, los datos obligatorios de pickup/dropoff y la estructura del manifiesto. La dirección de origen está fija en código; no se acepta que el navegador la cambie.
+La ruta de despacho exige además UBER_API_CONTRACT_VERIFIED=true antes de cualquier llamada real. Se mantiene false hasta que Uber confirme el contrato habilitado para Argentina, si hacen falta coordenadas, los datos obligatorios de pickup/dropoff y la estructura del manifiesto. El código actual no geocodifica ni envía latitud/longitud; si Uber confirma que son obligatorias en Argentina, hay que agregar esos campos y probarlos antes de habilitar este interruptor. La dirección de origen está fija en código; no se acepta que el navegador la cambie.
 
 La cotización usa el fee devuelto por Uber en unidad menor (centavos) y guarda fee/currency por separado. El panel convierte ese valor usando el código de moneda devuelto por Uber; nunca estima ni inventa un costo. La creación guarda delivery_id y tracking_url exactamente como los devuelve Uber. El panel permite abrir y copiar el tracking URL para reenviarlo al cliente.
 
