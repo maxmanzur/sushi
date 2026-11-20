@@ -106,7 +106,7 @@ Comando 2 — afecta exclusivamente sushi-preview-db:
 
     npx wrangler d1 execute sushi-preview-db --remote --file=./migrations/0002_uber_direct.sql
 
-Antes de ejecutar, comprobar que Wrangler muestre sushi-preview-db. Si aparece sushi-db, cancelar. No ejecutar estos comandos sobre producción. El esquema inicial crea las tablas base y la migración agrega confirmación de pago, estado de entrega y auditoría de despacho.
+Antes de ejecutar, comprobar que Wrangler muestre sushi-preview-db. Si aparece sushi-db, cancelar. No ejecutar estos comandos sobre producción. Ejecutar la migración 0002 una sola vez: sus ALTER TABLE no son repetibles. El esquema inicial crea las tablas base y la migración agrega confirmación de pago, estado de entrega y auditoría de despacho.\n\nOpcional para preparar un producto de prueba sin inventar un precio — afecta exclusivamente sushi-preview-db:\n\n    npx wrangler d1 execute sushi-preview-db --remote --file=./db/preview-test-fixture.sql\n\nDespués de iniciar sesión en /admin, buscar PRUEBAS PREVIEW y asignar al producto temporal un precio de prueba que elijas. No es un precio comercial. Esto permite crear pedidos desde el menú Preview sin copiar productos ni datos de producción.
 
 ## Plan de pruebas sin Uber
 
