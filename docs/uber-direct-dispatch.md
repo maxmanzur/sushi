@@ -129,3 +129,5 @@ No se ejecutaron estas pruebas contra Cloudflare porque Preview todavía no tien
 - No se inventan teléfonos, coordenadas, alias bancarios, tarifas ni credenciales.
 - No se realiza envío real.
 - No se modifica main ni el repositorio independiente maxmanzur/Gotoku.
+
+<!-- Preview deploy trigger: documentation-only change; no functional code or database changes. -->
