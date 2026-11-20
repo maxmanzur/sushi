@@ -5,3 +5,41 @@
 .payment-state{color:var(--bamboo);font-size:12px}
 .dispatch-actions [data-dispatch]{border-color:var(--gold);color:var(--gold)}
 @media(max-width:520px){.dispatch-actions{align-items:stretch}.dispatch-actions .button{width:100%}}
+
+/* Estado de despacho: texto legible incluso mientras el botón está deshabilitado. */
+.dispatch-actions [data-dispatch]{
+  color:var(--bg-deep);
+  background:var(--gold);
+  border:2px solid var(--gold);
+  font-weight:800;
+  line-height:1.25;
+  white-space:normal;
+  min-height:46px;
+  opacity:1;
+}
+.dispatch-actions [data-dispatch]:disabled{
+  color:var(--bg-deep);
+  background:var(--gold);
+  border-color:var(--gold);
+  opacity:1;
+  cursor:wait;
+}
+.dispatch-actions [data-dispatch].dispatch-pending{
+  color:var(--bg-deep);
+  background:var(--bamboo);
+  border-color:var(--bamboo);
+}
+#admin-message:not([hidden]){
+  display:block;
+  min-height:44px;
+  margin:14px 0 20px;
+  padding:14px 16px;
+  border:1px solid var(--gold);
+  border-radius:10px;
+  background:var(--bg-card);
+  color:var(--ivory);
+  font-size:14px;
+  font-weight:600;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
