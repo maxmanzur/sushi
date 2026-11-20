@@ -34,5 +34,5 @@ export async function get_delivery(env,deliveryId){
 }
 export async function cancel_delivery(env,deliveryId){
   if(!deliveryId)throw new Error("Falta delivery_id.");
-  return uberRequest(env,"/deliveries/"+encodeURIComponent(deliveryId),{method:"DELETE"});
+  return uberRequest(env,"/deliveries/"+encodeURIComponent(deliveryId)+"/cancel",{method:"POST"});
 }
