@@ -1,37 +1,10 @@
 <!doctype html>
 <html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0D0A12">
-  <meta name="description" content="Menú y pedidos online de GOTOKU SUSHI">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/css/app.css">
-  <title>GOTOKU SUSHI | Menú online</title>
-</head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0D0A12"><meta name="description" content="Menú y pedidos online de GOTOKU SUSHI"><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/css/app.css"><title>GOTOKU SUSHI | Menú online</title></head>
 <body>
-  <header class="site-header"><a class="brand" href="/">GOTOKU <span>SUSHI</span></a><button id="cart-toggle" class="button button-outline" type="button">Carrito <b id="cart-count">0</b></button></header>
-  <main class="container">
-    <section class="hero"><p class="eyebrow">PEDIDOS ONLINE</p><h1>Sushi para disfrutar.</h1><p>Elegí tus piezas, armá tu pedido y seguí su estado desde acá.</p></section>
-    <div id="notice" class="notice" role="status" hidden></div>
-    <nav id="categories" class="categories" aria-label="Categorías"></nav>
-    <section><div class="section-heading"><h2>Menú</h2><span id="menu-status" class="muted">Cargando menú…</span></div><div id="products" class="product-grid"></div></section>
-  </main>
-  <dialog id="cart-dialog" class="dialog"><form method="dialog" class="dialog-head"><h2>Tu pedido</h2><button class="icon-button" aria-label="Cerrar">×</button></form><div id="cart-items"></div><div id="cart-summary"></div>
-    <form id="checkout-form" class="checkout-form">
-      <h3>Datos del pedido</h3>
-      <label>Nombre<input name="customer_name" required maxlength="80" autocomplete="name"></label>
-      <label>Teléfono<input name="customer_phone" required maxlength="30" autocomplete="tel"></label>
-      <label>Entrega<select name="delivery_type" id="delivery-type"><option value="pickup">Retiro por el local</option><option value="delivery">Envío a domicilio</option></select></label>
-      <label id="address-field" hidden>Dirección<input name="customer_address" maxlength="180" autocomplete="street-address"></label>
-      <label>Pago<select name="payment_method" id="payment-method"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label>
-      <p id="discount-hint" class="muted">10% de descuento solo en retiro + efectivo.</p>
-      <label>Observaciones<textarea name="notes" maxlength="500" rows="2"></textarea></label>
-      <button class="button button-primary button-full" type="submit" id="submit-order">Confirmar pedido</button>
-    </form>
-  </dialog>
-  <footer class="site-footer">GOTOKU SUSHI</footer>
-  <script>if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));</script>
-  <script type="module" src="/js/app.js"></script>
-</body>
-</html>
+<header class="site-header"><a class="brand" href="/">GOTOKU <span>SUSHI</span></a><button id="cart-toggle" class="button button-outline" type="button">Carrito <b id="cart-count">0</b></button></header>
+<main class="container"><section class="hero"><p class="eyebrow">PEDIDOS ONLINE</p><h1>Sushi para disfrutar.</h1><p>Elegí tus piezas, armá tu pedido y seguí su estado desde acá.</p></section><div id="notice" class="notice" role="status" hidden></div><nav id="categories" class="categories" aria-label="Categorías"></nav><section><div class="section-heading"><h2>Menú</h2><span id="menu-status" class="muted">Cargando menú…</span></div><div id="products" class="product-grid"></div></section></main>
+<dialog id="cart-dialog" class="dialog"><form method="dialog" class="dialog-head"><h2>Tu pedido</h2><button class="icon-button" aria-label="Cerrar">×</button></form><div id="cart-items"></div><div id="cart-summary"></div>
+<form id="checkout-form" class="checkout-form"><h3>Datos del pedido</h3><label>Nombre<input name="customer_name" required maxlength="80" autocomplete="name"></label><label>Teléfono<input name="customer_phone" required maxlength="30" autocomplete="tel"></label><label>Entrega<select name="delivery_type" id="delivery-type"><option value="pickup">Retiro por el local</option><option value="delivery">Envío a domicilio</option></select></label><label id="address-field" hidden>Dirección<input name="customer_address" maxlength="180" autocomplete="street-address"></label><label>Pago<select name="payment_method" id="payment-method"><option value="cash">Efectivo</option><option value="transfer">Transferencia</option></select></label><p id="discount-hint" class="muted">10% de descuento solo en retiro + efectivo.</p><label>Observaciones<textarea name="notes" maxlength="500" rows="2"></textarea></label><div aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden"><label>No completar<input name="website" type="text" tabindex="-1" autocomplete="off"></label></div><button class="button button-primary button-full" type="submit" id="submit-order">Confirmar pedido</button></form></dialog>
+<footer class="site-footer">GOTOKU SUSHI</footer><script>if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));</script><script type="module" src="/js/app.js"></script>
+</body></html>
