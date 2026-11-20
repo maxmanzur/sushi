@@ -1,1 +1,93 @@
-const CACHE="gotoku-shell-v5";const SHELL=["/","/css/app.css","/js/app.js","/js/api.js","/js/cart.js","/manifest.webmanifest"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL))));self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));self.addEventListener("fetch",e=>{const u=new URL(e.request.url);if(e.request.method!=="GET"||u.pathname.startsWith("/api/")||u.pathname==="/admin"||u.pathname.startsWith("/admin/")||u.pathname==="/seguimiento.html")return;e.respondWith(fetch(e.request).then(r=>{if(r.ok){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}).catch(()=>caches.match(e.request)))});
+const CACHE = "gotoku-shell-v6";
+const SHELL = [
+  "/",
+  "/css/app.css",
+  "/js/app.js",
+  "/js/api.js",
+  "/js/cart.js",
+  "/manifest.webmanifest",
+  "/img/icon-192.png",
+  "/img/icon-512.png"
+];
+const SHELL_PATHS = new Set(SHELL);
+
+self.addEventListener("install", event => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await cache.addAll(SHELL);
+    await self.skipWaiting();
+  })());
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter(key => key.startsWith("gotoku-shell-") && key !== CACHE)
+      .map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+async function networkFirstShell(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request, { ignoreSearch: true });
+    return cached || new Response("No hay conexión. Volvé a intentarlo.", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8" }
+    });
+  }
+}
+
+async function networkFirstMenu(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      await cache.put("/api/menu", response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match("/api/menu");
+    return cached || new Response(JSON.stringify({ error: "Menú no disponible sin conexión." }), {
+      status: 503,
+      headers: { "Content-Type": "application/json; charset=utf-8" }
+    });
+  }
+}
+
+self.addEventListener("fetch", event => {
+  const request = event.request;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  const path = url.pathname;
+
+  // La API, salvo el menú público, siempre trabaja directamente contra la red.
+  if (path === "/api/menu") {
+    event.respondWith(networkFirstMenu(request));
+    return;
+  }
+  if (path.startsWith("/api/")) return;
+
+  // Seguimiento y administración nunca se interceptan ni se guardan en caché.
+  if (
+    path === "/seguimiento.html" ||
+    path === "/js/track.js" ||
+    path === "/admin" ||
+    path.startsWith("/admin/")
+  ) return;
+
+  // Solo los recursos del shell público usan network-first con fallback.
+  if (!SHELL_PATHS.has(path)) return;
+  event.respondWith(networkFirstShell(request));
+});

@@ -27,3 +27,12 @@
 .tracking-updated{margin:18px 0 0}
 .tracking-error .text-button{display:inline-block;margin-top:4px}
 @media(max-width:520px){.tracking-page{width:calc(100% - 28px);padding-top:28px}.tracking-copy-row{align-items:stretch;flex-direction:column}.tracking-copy-row .button{width:100%}.tracking-link-input{width:100%}}
+
+
+/* Etapa 6: instalación PWA */
+.menu-actions{display:flex;align-items:center;gap:16px;flex:0 0 auto}
+.install-app-button{color:var(--bamboo);border-bottom-color:var(--gold-border)}
+.ios-install-hint{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 14px;padding:12px 14px;border:1px solid var(--gold-border);border-radius:var(--radius-sm);background:var(--bg-card);color:var(--bamboo)}
+.ios-install-hint p{margin:0;font-size:12px;line-height:1.5}
+.ios-install-hint button{flex:0 0 auto;width:28px;height:28px;border:1px solid var(--line-subtle);border-radius:50%;background:transparent;color:var(--ivory);font-size:20px;cursor:pointer}
+@media(max-width:520px){.menu-actions{align-items:flex-end;flex-direction:column;gap:9px}.menu-intro .menu-actions .text-button{max-width:none;text-align:right}}

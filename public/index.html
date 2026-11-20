@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#111115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GOTOKU">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <meta name="description" content="Menú y pedidos online de GOTOKU SUSHI, por Max Manzur Sushiman.">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="stylesheet" href="/css/app.css">
@@ -34,9 +38,16 @@
   <section id="menu-view" hidden>
     <div class="menu-intro">
       <div><p class="eyebrow">MENÚ GOTOKU</p><h1>Elegí tus favoritos.</h1><p id="delivery-summary" class="muted"></p></div>
-      <button id="change-delivery" class="text-button" type="button">Cambiar</button>
+      <div class="menu-actions">
+        <button id="install-app" class="text-button install-app-button" type="button" hidden>Instalar app</button>
+        <button id="change-delivery" class="text-button" type="button">Cambiar</button>
+      </div>
     </div>
     <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <aside id="ios-install-hint" class="ios-install-hint" aria-label="Instalar GOTOKU en iPhone" hidden>
+      <p>Para instalar en iPhone: tocá Compartir y elegí «Agregar a inicio».</p>
+      <button id="close-ios-install-hint" type="button" aria-label="Cerrar aviso de instalación">×</button>
+    </aside>
     <nav id="categories" class="categories" aria-label="Categorías del menú"></nav>
     <section class="menu-section">
       <div class="section-heading"><h2 id="category-title">Todo el menú</h2><span id="menu-status" class="muted">Cargando menú…</span></div>
