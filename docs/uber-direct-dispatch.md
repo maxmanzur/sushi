@@ -1,81 +1,120 @@
-# GOTOKU SUSHI — Contrato de despacho Uber Direct
+# GOTOKU SUSHI — Preparación segura de Uber Direct
 
-## Regla operativa obligatoria
+## Límites no negociables
 
-Uber Direct solo puede recibir una solicitud de envío cuando el operador autorizado de GOTOKU SUSHI da la orden explícita:
+- Trabajar en la rama uber-direct-dispatch-setup; no fusionar ni modificar main.
+- No ejecutar comandos D1 contra sushi-db.
+- No crear envíos reales durante esta fase.
+- No crear páginas ni flujos nuevos para clientes; todos los cambios de interfaz están en /admin.
+- La única autorización de despacho es el botón/orden administrativa ESTÁ LISTO PARA ENTREGA.
+- El estado de entrega se registra aparte del estado comercial existente: orders.delivery_status='ready'.
+- Antes de despachar, el servidor exige delivery_type='delivery', payment_method='transfer', payment_status='confirmed', datos completos y pedido no cerrado.
+- Origen fijo: Cavassa 2763, Caseros, Buenos Aires, Argentina.
+- El costo del envío no se mezcla con el total de los productos; se informa aparte.
 
-**ESTÁ LISTO PARA ENTREGA**
+## Configuración de Cloudflare Pages
 
-Ningún otro evento, estado o automatismo equivale a esta autorización.
+El proyecto es HTML/CSS/JavaScript estático con Pages Functions. No tiene un proceso de compilación de frontend: el directorio publicado es public/. wrangler.toml declara pages_build_output_dir = "./public".
 
-No autorizan el envío: creación del pedido, confirmación del pago, aceptación, inicio o finalización de preparación, cambio de pantalla, temporizador, polling, webhook, ni una inferencia de la IA.
+El archivo Wrangler define:
+- Configuración base/producción: DB -> sushi-db.
+- Entorno preview: DB -> sushi-preview-db.
+- UBER_ENABLED=false y UBER_DRY_RUN=false tanto en producción como en Preview.
 
-La orden debe originarse en una acción explícita del operador autenticado. La IA puede preparar/validar datos, pero nunca inferir ni generar por sí sola la autorización.
+Cloudflare Pages permite definir recursos por entorno en Wrangler, pero el repositorio por sí solo no demuestra que Cloudflare haya recibido un webhook ni creado un deployment. El estado "No deployment available" no aparece como un error de build en GitHub: para el commit consultado no había checks/statuses publicados. Si sigue sin aparecer un Preview, revisar en el panel:
 
-## Reglas de ejecución
+1. Workers & Pages → proyecto sushi → Settings → Builds & deployments → Branch control.
+2. Confirmar que Production branch sea main.
+3. En Preview branch deployments, elegir "All non-production branches" o incluir uber-direct-dispatch-setup.
+4. Revisar Build watch paths: dejar sin filtros que excluyan los archivos del repositorio.
+5. Build configuration: Root directory vacío (raíz del repo), Build command vacío, Build output directory public.
+6. Guardar. Ir a Deployments y crear/reintentar un deployment seleccionando la rama uber-direct-dispatch-setup y su commit más reciente.
+7. Abrir el deployment de Preview y comprobar sus Settings/Bindings: DB debe apuntar al ID de sushi-preview-db (7296331d-e8ae-46b9-9032-ae4bb50cac32). Si muestra sushi-db, detenerse: no ejecutar SQL.
 
-1. La orden explícita inicia el flujo de despacho; no se solicita cotización ni se crea delivery antes de ella.
-2. Al recibirla, el servidor vuelve a leer el pedido desde D1. No confía en datos de cliente enviados por el navegador o por el agente.
-3. Solo se despacha un pedido de tipo `delivery`.
-4. Antes de contactar Uber, se verifica pago confirmado, nombre, teléfono y dirección de entrega completos.
-5. Si falta un dato o el pago no está confirmado, se detiene el flujo y se informa el motivo. No se contacta Uber.
-6. La operación debe ser idempotente: una segunda orden para el mismo pedido no puede crear un segundo delivery.
-7. El servidor registra quién/qué sesión dio la orden, fecha y hora, pedido, resultado de cotización, delivery_id, estado y tracking_url.
-8. La creación de delivery solo se considera exitosa si Uber devuelve una respuesta válida con identificador. El tracking_url se almacena y se devuelve sin alterarlo.
-9. Si Uber falla o responde de forma ambigua, no se reintenta a ciegas: primero se consulta el estado/resultado para evitar duplicados.
-10. Cancelaciones nunca son automáticas; requieren una orden explícita independiente del operador.
+Si el panel no ofrece el cambio de binding porque el Wrangler file ya es fuente de configuración, no borrar el binding de producción. El próximo deployment de Preview debe adoptar el override de env.preview. Si no lo hace, se necesita revisar el log del deployment y la configuración del proyecto en Cloudflare; no se puede corregir desde GitHub solamente.
 
-## Estado actual comprobado del proyecto
+## Identidad administrativa
 
-- Repositorio: `maxmanzur/sushi`.
-- Rama de producción: `main`.
-- Rama de trabajo: `uber-direct-dispatch-setup`.
-- Frontend: HTML/CSS/JavaScript nativo en `public/`.
-- API: Cloudflare Pages Functions en `functions/api/`.
-- Base de datos: Cloudflare D1, binding `DB`, base `sushi-db`.
-- Pedidos: tablas `orders`, `order_items`, `order_events` en `db/schema.sql`.
-- El pedido existente ya almacena número, nombre, teléfono, dirección, tipo de entrega, método de pago, notas, importes y estado.
-- Estados existentes: `nuevo`, `aceptado`, `en_preparacion`, `listo_para_retirar`, `enviado`, `entregado`, `cancelado`.
-- El esquema actual no tiene un campo que confirme que una transferencia fue recibida; `payment_method='transfer'` solo indica el medio de pago. No debe confundirse con pago confirmado.
+El login privado ahora requiere dos datos: identificación del operador y contraseña individual.
 
-## Implementación inicial en rama de trabajo
+Configurar como Secret en Cloudflare Pages → Settings → Variables and Secrets → Preview:
+- ADMIN_USERS_JSON: objeto JSON cuyas claves son IDs de operador y cuyos valores son sus contraseñas individuales. Ejemplo de estructura: {"operador_id":"CONTRASEÑA_INDIVIDUAL"}.
+- COOKIE_SECRET: secreto aleatorio largo.
 
-Se agregaron en la rama `uber-direct-dispatch-setup`:
+No compartir ni guardar esos valores en GitHub. No usar una contraseña compartida entre operadores: la auditoría guarda el operador autenticado y el ID único de la sesión. La identificación es tan confiable como la custodia individual de esas credenciales.
 
-- Migración `migrations/0002_uber_direct.sql`: incorpora confirmación de pago en `orders` y tabla `uber_dispatches` con unicidad por pedido.
-- Endpoint administrativo `POST /api/admin/orders/:id/payment`: confirma manualmente un pago, solo con sesión admin.
-- Endpoint administrativo `POST /api/admin/orders/:id/dispatch`: recibe únicamente la acción explícita del botón **ESTÁ LISTO PARA ENTREGA**, valida pago/datos/tipo y por ahora falla cerrado: no llama a Uber.
-- Panel: muestra estado del pago, botón para confirmar recepción del pago y botón de orden explícita de entrega.
+El endpoint de confirmación de pago actualiza el pago y agrega order_events en un único DB.batch. Guarda operador y sesión. El endpoint de despacho registra requested_by y operator_session_id.
 
-**Antes de probar el panel en Preview:** aplicar la migración 0002 a la base D1 de Preview. No aplicar todavía en producción. La ruta de despacho devuelve 503 deliberadamente hasta completar y verificar la integración API de Uber Direct habilitada para Argentina.
+## Interruptores de Uber
 
-## Diseño de implementación
+Los valores de Wrangler se mantienen bloqueados:
+- UBER_ENABLED=false
+- UBER_DRY_RUN=false
 
-- Mantener D1 como única fuente de verdad. No agregar Google Sheets, otra base ni otra aplicación.
-- Agregar un estado específico para pedidos de envío listos para despacho, sin reutilizar `listo_para_retirar`.
-- Incorporar confirmación de pago explícita y auditable en el panel administrativo (implementada en la rama de trabajo).
-- Incorporar una acción administrativa explícita con el texto **ESTÁ LISTO PARA ENTREGA**. Esa acción es la única que puede invocar el endpoint de despacho (botón y endpoint de validación preparados; llamada a Uber aún bloqueada).
-- El endpoint debe validar sesión administrativa, pedido, tipo de entrega, pago confirmado, datos requeridos e idempotencia en el servidor.
-- La cotización y creación del delivery se ejecutan como consecuencia de esa única orden explícita; no debe requerirse una segunda orden genérica para iniciar el envío. Si la cotización o Uber devuelven error, se detiene y se informa.
-- Guardar la información de Uber asociada al pedido y mostrar el tracking en el panel.
-- Credenciales Uber únicamente como secretos de Cloudflare Pages Functions; nunca en HTML, JavaScript público, D1, GitHub ni mensajes.
+Mientras ambos estén en false (o falten), POST /api/admin/orders/:id/dispatch devuelve 503 antes de contactar a Uber y no reserva el pedido.
 
-## Variables/secretos previstos
+Para pruebas sin Uber, se puede cambiar solo Preview a UBER_DRY_RUN=true, manteniendo UBER_ENABLED=false. En ese modo:
+- Se registra una reserva única en uber_dispatches.
+- Se marca orders.delivery_status='ready'.
+- Se marca el despacho como dry_run.
+- No se solicita cotización, no se obtiene token OAuth y no se llama a Uber.
+- Un segundo intento para el mismo pedido devuelve conflicto y no crea otro registro.
 
-- `UBER_CLIENT_ID` — secreto/variable del entorno de Functions, según la clasificación requerida por Uber.
-- `UBER_CLIENT_SECRET` — secreto.
-- `UBER_CUSTOMER_ID` — identificador de cuenta de Uber Direct.
-- `UBER_BASE_URL` — configuración de entorno sandbox/producción, definida tras verificar el acceso y documentación de la cuenta.
-- `UBER_WEBHOOK_SECRET` — solo si se habilitan webhooks posteriormente.
+Al terminar las pruebas, volver UBER_DRY_RUN=false y desplegar Preview nuevamente.
 
-No cargar valores ficticios. No configurar producción de Uber ni hacer pedidos reales hasta verificar las credenciales, cobertura, endpoint y entorno de la cuenta.
+Para una futura habilitación real, mantener UBER_DRY_RUN=false y agregar como secretos/variables únicamente en el entorno aprobado:
+- UBER_AUTH_URL
+- UBER_API_BASE_URL
+- UBER_CLIENT_ID
+- UBER_CLIENT_SECRET (Secret)
+- UBER_CUSTOMER_ID
+- UBER_PICKUP_PHONE_NUMBER (dato del local; no inventar)
 
-## Origen fijo
+No habilitar UBER_ENABLED=true hasta verificar por escrito el acceso de Uber Direct, las credenciales, el contrato API habilitado para Argentina, la dirección de origen y los datos requeridos por Uber.
 
-GOTOKU SUSHI, Cavassa 2763, Caseros, Buenos Aires, Argentina.
+## Cliente API aislado
 
-El origen se configura del lado servidor. No se acepta un origen alternativo desde el navegador ni desde la IA.
+functions/_lib/uber-direct.js contiene:
+- quote_delivery(env, payload)
+- create_delivery(env, payload)
+- get_delivery(env, deliveryId)
+- cancel_delivery(env, deliveryId)
 
-## Fuera de alcance de esta fase
+Las funciones leen credenciales solo desde env, cachean el token OAuth en memoria y no tienen valores reales en el repositorio. No se ejecutan desde polling, webhooks ni cambios de estado. La ruta de despacho es la única que podría llamar a cotización/creación, y solo después de la orden explícita y las validaciones.
 
-No crear una tienda nueva, carrito, bot de WhatsApp, Google Sheet, Make, n8n ni una segunda base de datos. No tocar el repositorio independiente `maxmanzur/Gotoku`. No desplegar a producción hasta probar en Preview y validar el flujo completo.
+La ruta reserva primero uber_dispatches.order_id (UNIQUE). Los intentos repetidos no pueden crear una segunda solicitud. Si Uber responde con error o de forma ambigua, el estado queda registrado y no hay reintento automático. El tracking URL se guarda sin alterarlo y se muestra en el panel privado, con opción de copiarlo para reenviarlo al cliente.
+
+La cancelación está disponible como función aislada, pero no hay endpoint ni automatismo que la invoque. Cualquier futura cancelación debe requerir una orden explícita independiente.
+
+## Inicialización D1 — SOLO Preview
+
+Ejecutar desde la raíz del repositorio, con Wrangler autenticado. Cada comando identifica explícitamente la base remota sushi-preview-db.
+
+Comando 1 — afecta exclusivamente sushi-preview-db:
+
+    npx wrangler d1 execute sushi-preview-db --remote --file=./db/schema.sql
+
+Comando 2 — afecta exclusivamente sushi-preview-db:
+
+    npx wrangler d1 execute sushi-preview-db --remote --file=./migrations/0002_uber_direct.sql
+
+Antes de ejecutar, comprobar el nombre de base que Wrangler muestra. Si aparece sushi-db, cancelar. No ejecutar ninguno de estos comandos sobre producción. El esquema inicial crea las tablas base y la migración agrega pago, estado de entrega y auditoría de despacho.
+
+## Plan de pruebas sin Uber
+
+Primero comprobar en Cloudflare Preview que DB apunta al ID de sushi-preview-db, y aplicar los dos comandos anteriores. Luego activar temporalmente UBER_DRY_RUN=true solo en Preview. Mantener siempre UBER_ENABLED=false.
+
+1. Pedido completo: envío, transferencia confirmada, nombre/teléfono/dirección completos y pedido abierto. Pulsar ESTÁ LISTO PARA ENTREGA. Esperado: respuesta de simulación, delivery_status='ready', una fila uber_dispatches con state='dry_run'; cero llamadas de red a Uber.
+2. Datos incompletos: quitar nombre, teléfono o dirección en un pedido de prueba. Esperado: 409; ninguna fila de despacho y ningún contacto con Uber.
+3. Retiro: delivery_type='pickup'. Esperado: 409; ninguna fila de despacho.
+4. Pago no confirmado: payment_status='pending' o método distinto de transferencia. Esperado: 409; ninguna fila de despacho.
+5. Doble clic / repetición: ejecutar dos POST seguidos sobre el mismo pedido completo. Esperado: solo una fila por order_id; el segundo intento informa que ya existe una solicitud y no llama a Uber.
+
+Después, volver UBER_DRY_RUN=false. No se prueba producción ni se habilita Uber en esta etapa.
+
+## Qué queda fuera de esta fase
+
+- No se prueba cobertura, cotización ni creación contra Uber.
+- No se inventan teléfono de pickup, alias bancario, tarifas ni credenciales.
+- No se realiza envío real.
+- No se modifica main ni el repositorio independiente maxmanzur/Gotoku.
