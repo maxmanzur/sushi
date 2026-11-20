@@ -1,1 +1,1 @@
-{"name":"GOTOKU SUSHI","short_name":"GOTOKU","start_url":"/","display":"standalone","background_color":"#0D0A12","theme_color":"#0D0A12","description":"Menú y pedidos online de GOTOKU SUSHI"}
+{"name":"GOTOKU SUSHI","short_name":"GOTOKU","start_url":"/","display":"standalone","background_color":"#0D0A12","theme_color":"#0D0A12","description":"Menú y pedidos online de GOTOKU SUSHI","icons":[{"src":"/img/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
