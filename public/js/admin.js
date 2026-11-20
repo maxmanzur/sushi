@@ -12,9 +12,10 @@ function localDate(value){if(!value)return "—";const raw=String(value),normali
 function beep(){if(!audio||!soundEnabled)return;try{const oscillator=audio.createOscillator(),gain=audio.createGain();oscillator.connect(gain);gain.connect(audio.destination);oscillator.frequency.value=880;gain.gain.setValueAtTime(.12,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.4);oscillator.start();oscillator.stop(audio.currentTime+.4)}catch{}}
 function filtersQuery(){const p=new URLSearchParams();if($("#filter-status").value)p.set("estado",$("#filter-status").value);if($("#filter-date").value)p.set("desde",$("#filter-date").value);if($("#filter-until").value)p.set("hasta",$("#filter-until").value);return p.toString()}
 function orderMarkup(order){
-  const id=Number(order.id),isNew=order.status==="nuevo",state=statusLabels[order.status]||String(order.status??"");
+  const id=Number(order.id),isNew=order.status==="nuevo",state=statusLabels[order.status]||String(order.status??""),paid=order.payment_status==="confirmed";
   const controls=isNew?'<div class="order-actions"><button class="button button-primary" type="button" data-action="accept" data-id="'+id+'">Aceptar</button><button class="button button-danger" type="button" data-action="reject" data-id="'+id+'">Rechazar</button></div>':'<label class="status-control">Cambiar estado<select data-status="'+id+'"><option value="">Seleccionar…</option>'+nextStatuses.map(s=>'<option value="'+s+'">'+statusLabels[s]+'</option>').join("")+'</select></label>';
-  return '<article class="order-card'+(isNew?' order-new':'')+'" data-order-id="'+id+'"><div class="order-top"><div><p class="order-number">Pedido #'+esc(order.order_number)+'</p><h3>'+esc(order.customer_name)+'</h3></div><span class="status-pill status-'+esc(order.status)+'">'+esc(state)+'</span></div><div class="order-meta"><span>'+esc(order.customer_phone)+'</span><span>'+labelType(order.delivery_type)+'</span><span>'+labelPayment(order.payment_method)+'</span><span>'+localDate(order.created_at)+'</span></div><p class="order-total">'+money(order.total)+'</p><div class="order-bottom"><button class="button" type="button" data-detail="'+id+'">Ver detalle</button>'+controls+'</div><div class="order-detail" id="detail-'+id+'" hidden></div></article>';
+  const dispatchControls=order.delivery_type==="delivery"?'<div class="dispatch-actions"><span class="payment-state">Pago: '+(paid?"Confirmado":"Pendiente")+'</span>'+(paid?'':'<button class="button" type="button" data-payment="'+id+'">Confirmar pago</button>')+'<button class="button button-primary" type="button" data-dispatch="'+id+'">ESTÁ LISTO PARA ENTREGA</button></div>':"";
+  return '<article class="order-card'+(isNew?' order-new':'')+'" data-order-id="'+id+'"><div class="order-top"><div><p class="order-number">Pedido #'+esc(order.order_number)+'</p><h3>'+esc(order.customer_name)+'</h3></div><span class="status-pill status-'+esc(order.status)+'">'+esc(state)+'</span></div><div class="order-meta"><span>'+esc(order.customer_phone)+'</span><span>'+labelType(order.delivery_type)+'</span><span>'+labelPayment(order.payment_method)+'</span><span>'+localDate(order.created_at)+'</span></div><p class="order-total">'+money(order.total)+'</p><div class="order-bottom"><button class="button" type="button" data-detail="'+id+'">Ver detalle</button>'+controls+dispatchControls+'</div><div class="order-detail" id="detail-'+id+'" hidden></div></article>';
 }
 function renderOrders(orders){$("#orders").innerHTML=orders.length?orders.map(orderMarkup).join(""):'<p class="empty-orders">No hay pedidos para estos filtros.</p>';updateLoadMoreButton()}
 function updateLoadMoreButton(){const button=$("#load-more");button.hidden=!hasMoreOrders;button.disabled=loadingMore;button.textContent=loadingMore?"Cargando…":"Cargar más"}
@@ -69,7 +70,7 @@ $("#load-more").addEventListener("click",async()=>{
   finally{loadingMore=false;updateLoadMoreButton()}
 });
 $("#orders").addEventListener("click",async event=>{
-  const detailButton=event.target.closest("[data-detail]"),actionButton=event.target.closest("[data-action]");
+  const detailButton=event.target.closest("[data-detail]"),actionButton=event.target.closest("[data-action]"),paymentButton=event.target.closest("[data-payment]"),dispatchButton=event.target.closest("[data-dispatch]");
   if(detailButton){
     const id=detailButton.dataset.detail,box=$("#detail-"+id);
     if(!box.hidden){box.hidden=true;detailButton.textContent="Ver detalle";return}
@@ -80,6 +81,16 @@ $("#orders").addEventListener("click",async event=>{
       box.innerHTML='<div class="detail-grid"><p><strong>Cliente:</strong> '+esc(order.customer_name)+'</p><p><strong>Teléfono:</strong> '+esc(order.customer_phone)+'</p><p><strong>Tipo:</strong> '+labelType(order.delivery_type)+'</p>'+address+'<p><strong>Pago:</strong> '+labelPayment(order.payment_method)+'</p><p><strong>Subtotal:</strong> '+money(order.subtotal)+'</p><p><strong>Descuento:</strong> −'+money(order.discount)+'</p><p><strong>Total:</strong> '+money(order.total)+'</p></div><h4>Productos</h4><ul>'+data.items.map(item=>'<li>'+esc(item.quantity)+' × '+esc(item.product_name)+' — '+money(item.line_total)+'</li>').join("")+'</ul>'+notes+'<h4>Historial</h4><ul>'+data.events.map(entry=>'<li>'+esc(statusLabels[entry.status]||entry.status)+' — '+localDate(entry.created_at)+(entry.note?' · '+esc(entry.note):"")+'</li>').join("")+'</ul>';
       box.hidden=false;detailButton.textContent="Ocultar detalle";
     }catch(error){msg(error.message)}
+  }
+  if(paymentButton){
+    const id=paymentButton.dataset.payment;
+    if(!window.confirm("¿Confirmás que el pago de este pedido fue recibido?"))return;
+    try{await api("/api/admin/orders/"+id+"/payment",{method:"POST",body:"{}"});await refreshOrdersOnly()}catch(error){msg(error.message)}
+  }
+  if(dispatchButton){
+    const id=dispatchButton.dataset.dispatch;
+    if(!window.confirm("¿Confirmás ESTÁ LISTO PARA ENTREGA? Esta es la única orden que puede iniciar el despacho."))return;
+    try{const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}"});msg(result.message||"Solicitud procesada.");await refreshOrdersOnly()}catch(error){msg(error.message)}
   }
   if(actionButton){
     const id=actionButton.dataset.id,status=actionButton.dataset.action==="accept"?"aceptado":"cancelado";
