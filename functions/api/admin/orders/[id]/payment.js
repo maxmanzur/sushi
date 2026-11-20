@@ -9,7 +9,7 @@ export async function onRequestPost({request,params,env}) {
   if(!Number.isSafeInteger(id)||id<1)return fail("Pedido no encontrado.",404);
   try {
     const results=await env.DB.batch([
-      env.DB.prepare("UPDATE orders SET payment_status='confirmed',payment_confirmed_at=CURRENT_TIMESTAMP,payment_confirmed_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND payment_status='pending'").bind(admin.operator_id,id),
+      env.DB.prepare("UPDATE orders SET payment_status='confirmed',payment_confirmed_at=CURRENT_TIMESTAMP,payment_confirmed_by=?,payment_confirmed_session_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND payment_status='pending'").bind(admin.operator_id,admin.session_id,id),
       env.DB.prepare("INSERT INTO order_events(order_id,status,note) SELECT id,'pago_confirmado','Pago confirmado por operador: ' || ? FROM orders WHERE id=? AND payment_status='confirmed' AND payment_confirmed_by=? AND changes()=1").bind(admin.operator_id,id,admin.operator_id)
     ]);
     if(results[0]?.meta?.changes)return json({ok:true});
