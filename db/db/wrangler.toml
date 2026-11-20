@@ -1,8 +1,0 @@
-name = "gotoku-sushi"
-compatibility_date = "2026-11-20"
-pages_build_output_dir = "./public"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "gotoku-sushi-db"
-database_id = "REEMPLAZAR_DATABASE_ID"
