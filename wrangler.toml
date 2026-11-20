@@ -2,10 +2,14 @@ name = "sushi-b3p"
 compatibility_date = "2026-11-20"
 pages_build_output_dir = "./public"
 
-# La vinculacion D1 se agrega cuando exista la base real.
-# No reemplazar con IDs inventados.
-
+# Producción: mantener vinculada a la base real.
 [[d1_databases]]
 binding = "DB"
 database_name = "sushi-db"
 database_id = "f6ddd9d0-55ce-4de2-b534-eb5ec87dd84f"
+
+# Preview: base aislada para pruebas. No usar datos reales.
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "sushi-preview-db"
+database_id = "7296331d-e8ae-46b9-9032-ae4bb50cac32"
