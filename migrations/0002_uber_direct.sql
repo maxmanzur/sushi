@@ -1,13 +1,17 @@
 ALTER TABLE orders ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'confirmed'));
 ALTER TABLE orders ADD COLUMN payment_confirmed_at TEXT;
 ALTER TABLE orders ADD COLUMN payment_confirmed_by TEXT;
+ALTER TABLE orders ADD COLUMN delivery_status TEXT NOT NULL DEFAULT 'not_ready' CHECK (delivery_status IN ('not_ready', 'ready'));
+ALTER TABLE orders ADD COLUMN delivery_ready_at TEXT;
+ALTER TABLE orders ADD COLUMN delivery_ready_by TEXT;
 
 CREATE TABLE IF NOT EXISTS uber_dispatches (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   order_id INTEGER NOT NULL UNIQUE,
-  state TEXT NOT NULL DEFAULT 'not_requested' CHECK (state IN ('not_requested', 'blocked', 'requested', 'quoted', 'created', 'failed', 'cancelled')),
-  requested_at TEXT,
-  requested_by TEXT,
+  state TEXT NOT NULL DEFAULT 'requested' CHECK (state IN ('requested', 'quoted', 'created', 'dry_run', 'failed', 'cancelled')),
+  requested_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  requested_by TEXT NOT NULL,
+  operator_session_id TEXT NOT NULL,
   quote_id TEXT,
   delivery_id TEXT,
   tracking_url TEXT,
