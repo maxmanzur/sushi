@@ -1,0 +1,2 @@
+import {json,fail} from "../_lib/response.js";
+export async function onRequestGet({env}){if(!env.DB)return fail("Base de datos no configurada.",503);try{const [categories,products]=await Promise.all([env.DB.prepare("SELECT id,name,sort_order FROM categories WHERE active=1 ORDER BY sort_order,id").all(),env.DB.prepare("SELECT id,category_id,name,description,price,image FROM products WHERE active=1 ORDER BY sort_order,id").all()]);return json({categories:categories.results,products:products.results})}catch{return fail("No se pudo cargar el menú.",500)}}
