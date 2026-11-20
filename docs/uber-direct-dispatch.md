@@ -88,7 +88,7 @@ Variables/secretos previstos para una futura conexión:
 
 La ruta de despacho exige además UBER_API_CONTRACT_VERIFIED=true antes de cualquier llamada real. Se mantiene false hasta que Uber confirme el contrato habilitado para Argentina, si hacen falta coordenadas, los datos obligatorios de pickup/dropoff y la estructura del manifiesto. La dirección de origen está fija en código; no se acepta que el navegador la cambie.
 
-La cotización usa el fee devuelto por Uber (unidad menor de la moneda) y guarda fee/currency por separado. La creación guarda delivery_id y tracking_url exactamente como los devuelve Uber. El panel permite abrir y copiar el tracking URL para reenviarlo al cliente.
+La cotización usa el fee devuelto por Uber en unidad menor (centavos) y guarda fee/currency por separado. El panel convierte ese valor usando el código de moneda devuelto por Uber; nunca estima ni inventa un costo. La creación guarda delivery_id y tracking_url exactamente como los devuelve Uber. El panel permite abrir y copiar el tracking URL para reenviarlo al cliente.
 
 La API legacy de Uber Direct documentada actualmente usa OAuth client_credentials con scope eats.deliveries, POST /v1/customers/{customer_id}/delivery_quotes, POST /v1/customers/{customer_id}/deliveries, GET del delivery y POST /cancel. Uber también documenta endpoints nuevos /v1/eats/deliveries/estimates y /v1/eats/deliveries/orders que pueden requerir aprobación escrita. No se elige ni activa una versión para Argentina hasta confirmación de Uber. Referencias: https://developer.uber.com/docs/deliveries/get-started y https://developer.uber.com/docs/deliveries/direct/guides/overview.
 
