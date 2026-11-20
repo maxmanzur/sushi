@@ -131,22 +131,19 @@ $("#orders").addEventListener("click",async event=>{
         setRegistered();
       }
     }catch(error){
-      let refreshed=false;
+      // Mostrar el error y liberar el botón inmediatamente; no esperar al refresco.
+      setFailed();
+      msg(error?.message||"No se pudo completar la solicitud. Revisá el pedido e intentá nuevamente.");
       try{
         const orders=await refreshOrders();
         const current=orders.find(order=>String(order.id)===String(id));
-        if(current?.dispatch_state){
+        if(current?.dispatch_state&&current.dispatch_state!=="failed"){
           setRegistered();
           msg(current.dispatch_state==="dry_run"
             ?"Simulación completada. No se contactó a Uber ni se creó un envío real"
             :"La solicitud de despacho ya está registrada. No vuelvas a intentarlo.");
-          refreshed=true;
         }
       }catch{}
-      if(!refreshed){
-        setFailed();
-        msg(error?.message||"No se pudo completar la solicitud. Revisá el pedido e intentá nuevamente.");
-      }
     }
   }
   if(actionButton){
