@@ -43,3 +43,25 @@
   line-height:1.5;
   overflow-wrap:anywhere;
 }
+
+/* Estado del botón de despacho: mantener texto visible durante toda la solicitud. */
+.dispatch-actions [data-dispatch],
+.dispatch-actions [data-dispatch]:disabled,
+.dispatch-actions [data-dispatch].dispatch-pending{
+  min-height:46px;
+  padding:10px 16px;
+  color:var(--bg-deep);
+  background:var(--gold);
+  border:2px solid var(--gold);
+  font-weight:800;
+  line-height:1.3;
+  opacity:1;
+  white-space:normal;
+  text-align:center;
+}
+.dispatch-actions [data-dispatch].dispatch-pending{
+  color:var(--bg-deep);
+  background:var(--bamboo);
+  border-color:var(--bamboo);
+}
+.dispatch-actions [data-dispatch]:disabled{cursor:default}

@@ -96,23 +96,57 @@ $("#orders").addEventListener("click",async event=>{
     const id=dispatchButton.dataset.dispatch;
     if(dispatchButton.disabled)return;
     const originalText=dispatchButton.textContent.trim()||"ESTÁ LISTO PARA ENTREGA";
-    dispatchButton.disabled=true;
-    dispatchButton.textContent="ENVIANDO…";
-    dispatchButton.setAttribute("aria-busy","true");
-    dispatchButton.classList.add("dispatch-pending");
-    try{
-      const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}",timeoutMs:20000});
-      try{await refreshOrders()}catch{}
-      msg(result.message||"Solicitud procesada.");
-    }catch(error){
-      if(error.message.startsWith("El servidor no respondió")){
-        try{await refreshOrders()}catch{}
-      }
+    const setPending=()=>{
+      dispatchButton.disabled=true;
+      dispatchButton.textContent="ENVIANDO…";
+      dispatchButton.setAttribute("aria-busy","true");
+      dispatchButton.classList.add("dispatch-pending");
+    };
+    const setRegistered=()=>{
+      dispatchButton.disabled=true;
+      dispatchButton.textContent="SOLICITUD REGISTRADA";
+      dispatchButton.removeAttribute("aria-busy");
+      dispatchButton.classList.remove("dispatch-pending");
+      dispatchButton.title="Despacho registrado";
+    };
+    const setFailed=()=>{
       dispatchButton.disabled=false;
       dispatchButton.textContent=originalText;
       dispatchButton.removeAttribute("aria-busy");
       dispatchButton.classList.remove("dispatch-pending");
-      msg(error.message);
+      dispatchButton.removeAttribute("title");
+    };
+    setPending();
+    try{
+      const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}",timeoutMs:20000});
+      if(!result||result.ok!==true)throw new Error(result?.message||"El servidor devolvió una respuesta inválida.");
+      setRegistered();
+      msg(result.dry_run
+        ?"Simulación completada. No se contactó a Uber ni se creó un envío real"
+        :(result.message||"Solicitud de despacho registrada."));
+      try{
+        await refreshOrders();
+      }catch(refreshError){
+        // El despacho ya fue confirmado: conservar el estado local y el mensaje de éxito.
+        setRegistered();
+      }
+    }catch(error){
+      let refreshed=false;
+      try{
+        const orders=await refreshOrders();
+        const current=orders.find(order=>String(order.id)===String(id));
+        if(current?.dispatch_state){
+          setRegistered();
+          msg(current.dispatch_state==="dry_run"
+            ?"Simulación completada. No se contactó a Uber ni se creó un envío real"
+            :"La solicitud de despacho ya está registrada. No vuelvas a intentarlo.");
+          refreshed=true;
+        }
+      }catch{}
+      if(!refreshed){
+        setFailed();
+        msg(error?.message||"No se pudo completar la solicitud. Revisá el pedido e intentá nuevamente.");
+      }
     }
   }
   if(actionButton){
