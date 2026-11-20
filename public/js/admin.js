@@ -93,8 +93,8 @@ $("#orders").addEventListener("click",async event=>{
   }
   if(dispatchButton){
     const id=dispatchButton.dataset.dispatch;
-    if(!window.confirm("¿Confirmás ESTÁ LISTO PARA ENTREGA? Esta es la única orden que puede iniciar el despacho."))return;
-    try{const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}"});msg(result.message||"Solicitud procesada.");await refreshOrdersOnly()}catch(error){msg(error.message)}
+    dispatchButton.disabled=true;
+    try{const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}"});msg(result.message||"Solicitud procesada.");await refreshOrdersOnly()}catch(error){msg(error.message);dispatchButton.disabled=false}
   }
   if(actionButton){
     const id=actionButton.dataset.id,status=actionButton.dataset.action==="accept"?"aceptado":"cancelado";
