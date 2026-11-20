@@ -1,5 +1,5 @@
-import {json,fail} from "../../../_lib/response.js";
-import {getAdminSession} from "../../../_lib/auth.js";
+import {json,fail} from "../../../../_lib/response.js";
+import {getAdminSession} from "../../../../_lib/auth.js";
 
 export async function onRequestPost({request,params,env}) {
   const admin=await getAdminSession(request,env);
