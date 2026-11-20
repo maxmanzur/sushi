@@ -56,7 +56,7 @@ async function showPanel(){
   await loadProducts();
   if(!pollTimer)pollTimer=setInterval(poll,8000);
 }
-$("#login").addEventListener("submit",async event=>{event.preventDefault();try{await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:new FormData(event.currentTarget).get("password")})});await showPanel()}catch(error){if(error.message==="No autorizado.")showLogin();msg(error.message)}});
+$("#login").addEventListener("submit",async event=>{event.preventDefault();try{await api("/api/admin/login",{method:"POST",body:JSON.stringify({username:new FormData(event.currentTarget).get("username"),password:new FormData(event.currentTarget).get("password")})});await showPanel()}catch(error){if(error.message==="No autorizado.")showLogin();msg(error.message)}});
 $("#logout").addEventListener("click",async()=>{try{await api("/api/admin/logout",{method:"POST",body:"{}"});location.reload()}catch(error){msg(error.message)}});
 $("#sound-toggle").addEventListener("click",async()=>{try{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass){msg("Este navegador no permite activar el sonido.");return}if(!audio)audio=new AudioContextClass();if(audio.state==="suspended")await audio.resume();soundEnabled=true;beep();$("#sound-toggle").textContent="Sonido activado";$("#sound-toggle").disabled=true}catch{msg("No se pudo activar el sonido.")}});
 $("#filter-status").addEventListener("change",refreshOrdersOnly);
