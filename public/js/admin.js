@@ -102,7 +102,7 @@ $("#orders").addEventListener("click",async event=>{
     dispatchButton.classList.add("dispatch-pending");
     try{
       const result=await api("/api/admin/orders/"+id+"/dispatch",{method:"POST",body:"{}",timeoutMs:20000});
-      await refreshOrders();
+      try{await refreshOrders()}catch{}
       msg(result.message||"Solicitud procesada.");
     }catch(error){
       if(error.message.startsWith("El servidor no respondió")){
