@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS uber_dispatches (
   requested_by TEXT NOT NULL,
   operator_session_id TEXT NOT NULL,
   quote_id TEXT,
+  quote_fee INTEGER,
+  quote_currency TEXT,
   delivery_id TEXT,
   tracking_url TEXT,
   uber_status TEXT,
