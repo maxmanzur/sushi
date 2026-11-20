@@ -1,6 +1,7 @@
 ALTER TABLE orders ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'confirmed'));
 ALTER TABLE orders ADD COLUMN payment_confirmed_at TEXT;
 ALTER TABLE orders ADD COLUMN payment_confirmed_by TEXT;
+ALTER TABLE orders ADD COLUMN payment_confirmed_session_id TEXT;
 ALTER TABLE orders ADD COLUMN delivery_status TEXT NOT NULL DEFAULT 'not_ready' CHECK (delivery_status IN ('not_ready', 'ready'));
 ALTER TABLE orders ADD COLUMN delivery_ready_at TEXT;
 ALTER TABLE orders ADD COLUMN delivery_ready_by TEXT;
