@@ -14,7 +14,9 @@ function filtersQuery(){const p=new URLSearchParams();if($("#filter-status").val
 function orderMarkup(order){
   const id=Number(order.id),isNew=order.status==="nuevo",state=statusLabels[order.status]||String(order.status??""),paid=order.payment_status==="confirmed";
   const controls=isNew?'<div class="order-actions"><button class="button button-primary" type="button" data-action="accept" data-id="'+id+'">Aceptar</button><button class="button button-danger" type="button" data-action="reject" data-id="'+id+'">Rechazar</button></div>':'<label class="status-control">Cambiar estado<select data-status="'+id+'"><option value="">Seleccionar…</option>'+nextStatuses.map(s=>'<option value="'+s+'">'+statusLabels[s]+'</option>').join("")+'</select></label>';
-  const dispatchControls=order.delivery_type==="delivery"?'<div class="dispatch-actions"><span class="payment-state">Pago: '+(paid?"Confirmado":"Pendiente")+'</span>'+(paid?'':'<button class="button" type="button" data-payment="'+id+'">Confirmar pago</button>')+'<button class="button button-primary" type="button" data-dispatch="'+id+'"'+(paid?"":" disabled title=\"Confirmá el pago antes de despachar\"")+'>ESTÁ LISTO PARA ENTREGA</button></div>':"";
+  const alreadyDispatched=Boolean(order.dispatch_state);
+  const tracking=order.tracking_url?'<div class="tracking-actions"><a href="'+esc(order.tracking_url)+'" target="_blank" rel="noopener noreferrer">Ver seguimiento Uber</a><button class="button" type="button" data-copy-tracking="'+esc(order.tracking_url)+'">Copiar enlace</button></div>':"";
+  const dispatchControls=order.delivery_type==="delivery"?'<div class="dispatch-actions"><span class="payment-state">Pago: '+(paid?"Confirmado":"Pendiente")+'</span><span class="payment-state">Entrega: '+(order.delivery_status==="ready"?"Lista":"Pendiente")+'</span>'+(paid?'':'<button class="button" type="button" data-payment="'+id+'">Confirmar transferencia</button>')+'<button class="button button-primary" type="button" data-dispatch="'+id+'"'+(paid&&!alreadyDispatched?"":" disabled title=\"Pago pendiente o despacho ya registrado\"")+'>'+(alreadyDispatched?"SOLICITUD REGISTRADA":"ESTÁ LISTO PARA ENTREGA")+'</button>'+tracking+'</div>':"";
   return '<article class="order-card'+(isNew?' order-new':'')+'" data-order-id="'+id+'"><div class="order-top"><div><p class="order-number">Pedido #'+esc(order.order_number)+'</p><h3>'+esc(order.customer_name)+'</h3></div><span class="status-pill status-'+esc(order.status)+'">'+esc(state)+'</span></div><div class="order-meta"><span>'+esc(order.customer_phone)+'</span><span>'+labelType(order.delivery_type)+'</span><span>'+labelPayment(order.payment_method)+'</span><span>'+localDate(order.created_at)+'</span></div><p class="order-total">'+money(order.total)+'</p><div class="order-bottom"><button class="button" type="button" data-detail="'+id+'">Ver detalle</button>'+controls+dispatchControls+'</div><div class="order-detail" id="detail-'+id+'" hidden></div></article>';
 }
 function renderOrders(orders){$("#orders").innerHTML=orders.length?orders.map(orderMarkup).join(""):'<p class="empty-orders">No hay pedidos para estos filtros.</p>';updateLoadMoreButton()}
@@ -41,7 +43,7 @@ async function loadProducts(){const data=await api("/api/admin/products");render
 async function refreshOrdersOnly(){try{await refreshOrders();$("#admin-message").hidden=true}catch(error){if(error.message==="No autorizado.")showLogin();msg(error.message)}}
 async function poll(){
   if($("#panel").hidden||document.visibilityState!=="visible")return;
-  try{const data=await api("/api/admin/orders?since="+lastKnownId),incoming=data.orders||[];if(incoming.length){const newest=Math.max(...incoming.map(order=>Number(order.id)||0));if(newest>lastKnownId){lastKnownId=newest;beep();await refreshOrders()}}}
+  try{const orders=await refreshOrders();const newest=orders.reduce((max,order)=>Math.max(max,Number(order.id)||0),0);if(newest>lastKnownId){lastKnownId=newest;beep()}}
   catch(error){if(error.message==="No autorizado.")showLogin();else msg(error.message)}
 }
 function showLogin(){$("#panel").hidden=true;$("#login").hidden=false;if(pollTimer){clearInterval(pollTimer);pollTimer=null}}
@@ -71,6 +73,8 @@ $("#load-more").addEventListener("click",async()=>{
 });
 $("#orders").addEventListener("click",async event=>{
   const detailButton=event.target.closest("[data-detail]"),actionButton=event.target.closest("[data-action]"),paymentButton=event.target.closest("[data-payment]"),dispatchButton=event.target.closest("[data-dispatch]");
+  const copyTrackingButton=event.target.closest("[data-copy-tracking]");
+  if(copyTrackingButton){try{await navigator.clipboard.writeText(copyTrackingButton.dataset.copyTracking);msg("Enlace de seguimiento copiado. Podés reenviarlo al cliente.")}catch{msg("No se pudo copiar el enlace. Abrilo y copialo manualmente.")}}
   if(detailButton){
     const id=detailButton.dataset.detail,box=$("#detail-"+id);
     if(!box.hidden){box.hidden=true;detailButton.textContent="Ver detalle";return}
