@@ -38,12 +38,23 @@ La orden debe originarse en una acción explícita del operador autenticado. La 
 - Estados existentes: `nuevo`, `aceptado`, `en_preparacion`, `listo_para_retirar`, `enviado`, `entregado`, `cancelado`.
 - El esquema actual no tiene un campo que confirme que una transferencia fue recibida; `payment_method='transfer'` solo indica el medio de pago. No debe confundirse con pago confirmado.
 
+## Implementación inicial en rama de trabajo
+
+Se agregaron en la rama `uber-direct-dispatch-setup`:
+
+- Migración `migrations/0002_uber_direct.sql`: incorpora confirmación de pago en `orders` y tabla `uber_dispatches` con unicidad por pedido.
+- Endpoint administrativo `POST /api/admin/orders/:id/payment`: confirma manualmente un pago, solo con sesión admin.
+- Endpoint administrativo `POST /api/admin/orders/:id/dispatch`: recibe únicamente la acción explícita del botón **ESTÁ LISTO PARA ENTREGA**, valida pago/datos/tipo y por ahora falla cerrado: no llama a Uber.
+- Panel: muestra estado del pago, botón para confirmar recepción del pago y botón de orden explícita de entrega.
+
+**Antes de probar el panel en Preview:** aplicar la migración 0002 a la base D1 de Preview. No aplicar todavía en producción. La ruta de despacho devuelve 503 deliberadamente hasta completar y verificar la integración API de Uber Direct habilitada para Argentina.
+
 ## Diseño de implementación
 
 - Mantener D1 como única fuente de verdad. No agregar Google Sheets, otra base ni otra aplicación.
 - Agregar un estado específico para pedidos de envío listos para despacho, sin reutilizar `listo_para_retirar`.
-- Incorporar confirmación de pago explícita y auditable en el panel administrativo.
-- Incorporar una acción administrativa explícita con el texto **ESTÁ LISTO PARA ENTREGA**. Esa acción es la única que puede invocar el endpoint de despacho.
+- Incorporar confirmación de pago explícita y auditable en el panel administrativo (implementada en la rama de trabajo).
+- Incorporar una acción administrativa explícita con el texto **ESTÁ LISTO PARA ENTREGA**. Esa acción es la única que puede invocar el endpoint de despacho (botón y endpoint de validación preparados; llamada a Uber aún bloqueada).
 - El endpoint debe validar sesión administrativa, pedido, tipo de entrega, pago confirmado, datos requeridos e idempotencia en el servidor.
 - La cotización y creación del delivery se ejecutan como consecuencia de esa única orden explícita; no debe requerirse una segunda orden genérica para iniciar el envío. Si la cotización o Uber devuelven error, se detiene y se informa.
 - Guardar la información de Uber asociada al pedido y mostrar el tracking en el panel.
