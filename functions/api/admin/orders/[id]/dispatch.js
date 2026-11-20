@@ -20,10 +20,5 @@ export async function onRequestPost({request,params,env}) {
   if(order.delivery_type!=="delivery")return fail("Este pedido es para retirar; no corresponde Uber Direct.",409);
   if(order.payment_status!=="confirmed")return fail("Primero tenés que confirmar el pago. No se contactó a Uber.",409);
   if(!order.customer_name?.trim()||!order.customer_phone?.trim()||!order.customer_address?.trim())return fail("Faltan nombre, teléfono o dirección. No se contactó a Uber.",409);
-  return json({
-    ok:false,
-    dispatch_blocked:true,
-    message:"Orden recibida, pero Uber Direct todavía no está habilitado para despachar. No se solicitó cotización ni se creó ningún envío.",
-    order_number:order.order_number
-  },503);
+  return fail("Uber Direct todavía no está habilitado para despachar. No se solicitó cotización ni se creó ningún envío.",503);
 }
