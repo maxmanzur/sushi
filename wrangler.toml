@@ -4,3 +4,8 @@ pages_build_output_dir = "./public"
 
 # La vinculacion D1 se agrega cuando exista la base real.
 # No reemplazar con IDs inventados.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sushi-db"
+database_id = "f6ddd9d0-55ce-4de2-b534-eb5ec87dd84f"
