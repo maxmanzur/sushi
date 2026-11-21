@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS products (
   subbloque TEXT,
   subbloque_nota TEXT,
   grupo TEXT,
+  composicion TEXT,
   FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 CREATE TABLE IF NOT EXISTS orders (

@@ -1,4 +1,4 @@
-const CACHE = "gotoku-shell-v7";
+const CACHE = "gotoku-shell-v8";
 const SHELL = [
   "/",
   "/css/app.css",

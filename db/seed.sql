@@ -7,3 +7,4 @@ INSERT INTO categories (name, sort_order) SELECT 'Rollos', 2 WHERE NOT EXISTS (S
 INSERT INTO categories (name, sort_order) SELECT 'Combinados', 3 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name='Combinados');
 INSERT INTO categories (name, sort_order) SELECT 'Cortes', 4 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name='Cortes');
 INSERT INTO categories (name, sort_order) SELECT 'Adicionales', 5 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name='Adicionales');
+INSERT INTO categories (name, sort_order) SELECT 'Full Salmón', 6 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name='Full Salmón');
