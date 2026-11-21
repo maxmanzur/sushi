@@ -15,7 +15,7 @@ export async function onRequestPost({request,env}) {
   if(Number(recent?.total||0)>=3)return fail("Demasiados pedidos seguidos. Intentá de nuevo en unos minutos.",429);
   const ids=[...new Set(x.items.map(i=>Number(i?.product_id)))];
   if(ids.some(i=>!Number.isInteger(i)||i<1))return fail("Producto inválido.");
-  const rows=await env.DB.prepare("SELECT id,name,price FROM products WHERE active=1 AND id IN ("+ids.map(() => "?").join(",")+")").bind(...ids).all();
+  const rows=await env.DB.prepare("SELECT id,name,price,cantidad_minima FROM products WHERE active=1 AND id IN ("+ids.map(() => "?").join(",")+")").bind(...ids).all();
   if(rows.results.length!==ids.length)return fail("Hay productos que ya no están disponibles.");
   if(rows.results.some(p=>p.price===null))return fail("Hay productos sin precio confirmado.");
   const map=new Map(rows.results.map(p=>[p.id,p]));
@@ -23,6 +23,7 @@ export async function onRequestPost({request,env}) {
   for(const item of x.items){
     const p=map.get(Number(item?.product_id)),q=Number(item?.quantity);
     if(!p||!Number.isInteger(q)||q<1||q>30)return fail("Cantidad inválida.");
+    if(q<p.cantidad_minima)return fail("La cantidad mínima de "+p.name+" es "+p.cantidad_minima+".");
     const lineTotal=p.price*q;subtotal+=lineTotal;
     lines.push({id:p.id,name:p.name,price:p.price,q,total:lineTotal});
   }

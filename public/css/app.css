@@ -36,3 +36,5 @@
 .ios-install-hint p{margin:0;font-size:12px;line-height:1.5}
 .ios-install-hint button{flex:0 0 auto;width:28px;height:28px;border:1px solid var(--line-subtle);border-radius:50%;background:transparent;color:var(--ivory);font-size:20px;cursor:pointer}
 @media(max-width:520px){.menu-actions{align-items:flex-end;flex-direction:column;gap:9px}.menu-intro .menu-actions .text-button{max-width:none;text-align:right}}
+
+.category-heading,.subblock-head,.group-title{grid-column:1/-1}.category-heading{margin:22px 0 0;font-family:Georgia,serif;font-size:27px;font-weight:400;color:var(--ivory)}.subblock-head{margin-top:20px;padding-top:16px;border-top:1px solid var(--gold-border)}.subblock-title{margin:0;font-family:Georgia,serif;font-size:24px;font-weight:400;color:var(--gold)}.subblock-note{margin:5px 0 0;color:var(--bamboo);font-size:12px;letter-spacing:.08em}.group-title{margin:8px 0 0;color:var(--bamboo);font-family:Georgia,serif;font-size:17px;font-weight:400}.min-note{color:var(--bamboo)!important;font-weight:700}.quantity-selector button:disabled,.cart-actions button:disabled{opacity:.35;cursor:not-allowed}
